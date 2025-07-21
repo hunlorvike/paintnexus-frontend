@@ -1,0 +1,23 @@
+{
+  "welcome": "Welcome to PaintNexus!",
+  "dashboard": "Dashboard",
+  "tools": "Tools",
+  "paintCalculator": "Paint Calculator",
+  "orders": "Orders",
+  "products": "Products",
+  "customers": "Customers",
+  "analytics": "Analytics",
+  "search": "Search...",
+  "notifications": "Notifications",
+  "myAccount": "My Account",
+  "settings": "Settings",
+  "support": "Support",
+  "logout": "Logout",
+  "toggleTheme": "Toggle theme",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  "toggleUserMenu": "Toggle user menu",
+  "paintManagement": "Paint Management",
+  "overview": "Overview"
+}

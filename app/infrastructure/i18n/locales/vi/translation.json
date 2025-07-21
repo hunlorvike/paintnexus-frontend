@@ -1,0 +1,23 @@
+{
+  "welcome": "Chào mừng đến với PaintNexus!",
+  "dashboard": "Bảng điều khiển",
+  "tools": "Công cụ",
+  "paintCalculator": "Công cụ tính sơn",
+  "orders": "Đơn hàng",
+  "products": "Sản phẩm",
+  "customers": "Khách hàng",
+  "analytics": "Phân tích",
+  "search": "Tìm kiếm...",
+  "notifications": "Thông báo",
+  "myAccount": "Tài khoản của tôi",
+  "settings": "Cài đặt",
+  "support": "Hỗ trợ",
+  "logout": "Đăng xuất",
+  "toggleTheme": "Chuyển đổi chủ đề",
+  "light": "Sáng",
+  "dark": "Tối",
+  "system": "Hệ thống",
+  "toggleUserMenu": "Chuyển đổi menu người dùng",
+  "paintManagement": "Quản lý sơn",
+  "overview": "Tổng quan"
+}
