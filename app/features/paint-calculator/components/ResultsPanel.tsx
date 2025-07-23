@@ -1,4 +1,4 @@
-import { Calculator, DollarSign, Clock, Info } from 'lucide-react';
+import { Calculator, DollarSign, Clock, Info, PaintBucket } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import {
 } from '@/shared/components/ui/alert';
 import type React from 'react';
 import type { ResultsPanelProps } from './types';
+import { DAILY_WORK_HOURS } from '../constants';
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('vi-VN', {
@@ -42,6 +43,42 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Paint Materials */}
+        <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-green-700 dark:text-green-300">
+              <PaintBucket className="w-4 h-4" />
+              Vật Tư Sơn
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Tổng diện tích cần sơn:
+              </span>
+              <span className="font-semibold text-base">
+                {formatNumber(results.totalArea)} m²
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Sơn lót ước tính:
+              </span>
+              <span className="font-semibold text-base">
+                {formatNumber(results.primerPaintLiters)} lít
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Sơn phủ ước tính ({laborSpecs.numFinishPaintCoats || 2} lớp):
+              </span>
+              <span className="font-semibold text-base">
+                {formatNumber(results.finishPaintLiters)} lít
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Labor */}
         <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/50">
           <CardHeader className="pb-2">
@@ -98,8 +135,9 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
               </span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Tương đương khoảng {Math.ceil(results.workTime / 8)} ngày làm việc
-              (8 giờ/ngày).
+              Tương đương khoảng{' '}
+              {Math.ceil(results.workTime / DAILY_WORK_HOURS)} ngày làm việc (
+              {DAILY_WORK_HOURS} giờ/ngày).
             </p>
           </CardContent>
         </Card>
@@ -122,6 +160,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
           <AlertDescription className="text-xs leading-relaxed">
             Các số liệu trên chỉ là ước tính. Nên mua dư 10-15% vật tư và tham
             khảo báo giá thực tế từ nhà thầu để có thông tin chính xác nhất.
+            (Giá sơn chưa được tính vào tổng chi phí này).
           </AlertDescription>
         </Alert>
       </CardContent>

@@ -1,58 +1,115 @@
-export enum HouseType {
-  ONE_ROOM = 1,
-  TWO_THREE_ROOMS = 2,
-  FOUR_FIVE_ROOMS = 3,
-  MORE_THAN_FIVE_ROOMS = 4,
-  COMPLEX = 5,
-}
-
-export const HOUSE_TYPE_LABELS: Record<HouseType, string> = {
-  [HouseType.ONE_ROOM]: '1 phòng',
-  [HouseType.TWO_THREE_ROOMS]: '2-3 phòng',
-  [HouseType.FOUR_FIVE_ROOMS]: '4-5 phòng',
-  [HouseType.MORE_THAN_FIVE_ROOMS]: '>5 phòng',
-  [HouseType.COMPLEX]: 'Phức tạp',
-};
-
-export enum WallSurfaceType {
-  FLAT = 1,
-  ROUGH_BRICK = 2,
-  CURVED_ANGLED = 3,
-}
-
-export const WALL_SURFACE_TYPE_LABELS: Record<WallSurfaceType, string> = {
-  [WallSurfaceType.FLAT]: 'Tường phẳng',
-  [WallSurfaceType.ROUGH_BRICK]: 'Gạch thô',
-  [WallSurfaceType.CURVED_ANGLED]: 'Tường có cong, góc',
-};
-
 export enum CalculationTab {
   DETAILED = 'detailed',
   QUICK = 'quick',
 }
 
-export const WALL_COEFFICIENTS: Record<HouseType, number> = {
-  [HouseType.ONE_ROOM]: 1.0,
-  [HouseType.TWO_THREE_ROOMS]: 1.3,
-  [HouseType.FOUR_FIVE_ROOMS]: 1.5,
-  [HouseType.MORE_THAN_FIVE_ROOMS]: 1.7,
-  [HouseType.COMPLEX]: 1.9,
+export enum HouseType {
+  CAP_4 = 'cap4',
+  NHA_ONG = 'nha_ong',
+  BIET_THU = 'biet_thu',
+  CHUNG_CU = 'chung_cu',
+  NHA_LIEN_KE = 'nha_lien_ke',
+  NHA_TRO = 'nha_tro',
+}
+
+export const HOUSE_TYPE_LABELS: Record<HouseType, string> = {
+  [HouseType.CAP_4]: 'Nhà Cấp 4',
+  [HouseType.NHA_ONG]: 'Nhà Ống (Nhà Phố)',
+  [HouseType.BIET_THU]: 'Nhà Biệt Thự',
+  [HouseType.CHUNG_CU]: 'Chung Cư (Căn Hộ)',
+  [HouseType.NHA_LIEN_KE]: 'Nhà Liền Kề',
+  [HouseType.NHA_TRO]: 'Nhà Trọ/Phòng Trọ',
 };
 
-export const WALL_SURFACE_COEFFICIENTS: Record<WallSurfaceType, number> = {
-  [WallSurfaceType.FLAT]: 1.0,
-  [WallSurfaceType.ROUGH_BRICK]: 1.05,
-  [WallSurfaceType.CURVED_ANGLED]: 1.1,
+// Standard door/window/balcony door areas
+export const STANDARD_DOOR_AREA = 1.6; // 2.0m x 0.8m
+export const STANDARD_WINDOW_AREA = 1.2; // 1.2m x 1.0m
+export const STANDARD_BALCONY_DOOR_AREA = 3.15; // 2.1m x 1.5m
+
+// Performance of paint usage (m²/liter)
+export const PRIMER_COVERAGE_PER_LITER = 10; // 10 m²/lít sơn lót
+export const FINISH_PAINT_COVERAGE_PER_LITER = 14; // 14 m²/lít sơn phủ mỗi lớp
+
+// Default coefficients based on CONG_THUC_TINH_SON.MD
+export const DEFAULT_COEFFICIENTS = {
+  [HouseType.CAP_4]: {
+    wallCoefficient: 1.2,
+    surfaceCoefficient: 1.05,
+    ceilingCoefficient: 1.05,
+    complexDesignCoefficient: 0, // Not applicable
+    staircaseCoefficient: 0, // Not applicable
+    sharedWallCoefficient: 0, // Not applicable
+    balconyCoefficient: 0, // Not applicable
+    economicCoefficient: 0, // Not applicable
+    wastageFactor: 0.15,
+    quickCalcMultiplier: 2.1,
+    quickCalcDeduction: 6,
+  },
+  [HouseType.NHA_ONG]: {
+    wallCoefficient: 1.6,
+    surfaceCoefficient: 1.0,
+    ceilingCoefficient: 1.05, // Assumed, not explicitly stated for Nha Ong but common
+    complexDesignCoefficient: 0, // Not applicable
+    staircaseCoefficient: 1.3,
+    sharedWallCoefficient: 0, // Not applicable
+    balconyCoefficient: 0, // Not applicable
+    economicCoefficient: 0, // Not applicable
+    wastageFactor: 0.18,
+    quickCalcMultiplier: 3.5,
+    quickCalcDeduction: 8,
+  },
+  [HouseType.BIET_THU]: {
+    wallCoefficient: 1.4,
+    surfaceCoefficient: 1.0,
+    ceilingCoefficient: 1.05,
+    complexDesignCoefficient: 1.1,
+    staircaseCoefficient: 0, // Not explicitly stated in example calculation, but could be present
+    sharedWallCoefficient: 0, // Not applicable
+    balconyCoefficient: 0, // Not explicitly stated in example calculation, but could be present
+    economicCoefficient: 0, // Not applicable
+    wastageFactor: 0.2,
+    quickCalcMultiplier: 2.8,
+    quickCalcDeduction: 25,
+  },
+  [HouseType.CHUNG_CU]: {
+    wallCoefficient: 1.1,
+    surfaceCoefficient: 1.0,
+    ceilingCoefficient: 1.05, // Assumed, not explicitly stated for Chung Cu but common
+    complexDesignCoefficient: 0, // Not applicable
+    staircaseCoefficient: 0, // Not applicable
+    sharedWallCoefficient: 0, // Not applicable
+    balconyCoefficient: 0.7,
+    economicCoefficient: 0, // Not applicable
+    wastageFactor: 0.12,
+    quickCalcMultiplier: 1.5,
+    quickCalcDeduction: 4,
+  },
+  [HouseType.NHA_LIEN_KE]: {
+    wallCoefficient: 1.3,
+    surfaceCoefficient: 1.0,
+    ceilingCoefficient: 1.05, // Assumed, not explicitly stated for Nha Lien Ke but common
+    complexDesignCoefficient: 0, // Not applicable
+    staircaseCoefficient: 0, // Not explicitly stated in example calculation, but could be present
+    sharedWallCoefficient: 0.85,
+    balconyCoefficient: 0, // Not explicitly stated in example calculation, but could be present
+    economicCoefficient: 0, // Not applicable
+    wastageFactor: 0.15,
+    quickCalcMultiplier: 3.2,
+    quickCalcDeduction: 6,
+  },
+  [HouseType.NHA_TRO]: {
+    wallCoefficient: 1.8,
+    surfaceCoefficient: 1.1,
+    ceilingCoefficient: 1.05, // Assumed, not explicitly stated for Nha Tro but common
+    complexDesignCoefficient: 0, // Not applicable
+    staircaseCoefficient: 0, // Not applicable
+    sharedWallCoefficient: 0, // Not applicable
+    balconyCoefficient: 0, // Not applicable
+    economicCoefficient: 0.9,
+    wastageFactor: 0.1,
+    quickCalcMultiplier: 50, // This is for 'Số phòng'
+    quickCalcDeduction: 20, // This is for 'Số phòng'
+  },
 };
-
-export const DOOR_STANDARD_WIDTH = 0.8;
-export const DOOR_STANDARD_HEIGHT = 1.8;
-export const WINDOW_STANDARD_WIDTH = 1.0;
-export const WINDOW_STANDARD_HEIGHT = 1.2;
-
-export const WASTAGE_FACTOR = 1.15;
-
-export const QUICK_CALC_FLOOR_AREA_MULTIPLIER = 3.2;
-export const QUICK_CALC_DEDUCTION = 8;
 
 export const DAILY_WORK_HOURS = 8;

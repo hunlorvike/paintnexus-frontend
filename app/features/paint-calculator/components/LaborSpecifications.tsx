@@ -22,7 +22,8 @@ export const LaborSpecifications: React.FC<LaborSpecificationsProps> = ({
         Định Mức & Đơn Giá Nhân Công
       </CardTitle>
       <CardDescription className="text-sm">
-        Cấu hình chi phí nhân công và các chi phí khác
+        Cấu hình chi phí nhân công và các chi phí khác liên quan đến việc thi
+        công sơn.
       </CardDescription>
     </CardHeader>
     <CardContent className="space-y-6">
@@ -33,6 +34,9 @@ export const LaborSpecifications: React.FC<LaborSpecificationsProps> = ({
             className="font-semibold text-gray-700 dark:text-gray-300"
           >
             Giá nhân công (VND/m²)
+            <p className="text-xs text-muted-foreground mt-1">
+              Chi phí thuê thợ sơn tính trên mỗi mét vuông diện tích sơn.
+            </p>
           </Label>
           <Input
             id="laborCostPerM2"
@@ -54,6 +58,10 @@ export const LaborSpecifications: React.FC<LaborSpecificationsProps> = ({
             className="font-semibold text-gray-700 dark:text-gray-300"
           >
             Thời gian thi công (giờ/m²)
+            <p className="text-xs text-muted-foreground mt-1">
+              Thời gian ước tính để hoàn thành sơn một mét vuông (ví dụ: 0.25
+              giờ/m²).
+            </p>
           </Label>
           <Input
             id="timePerM2"
@@ -70,12 +78,40 @@ export const LaborSpecifications: React.FC<LaborSpecificationsProps> = ({
             min="0"
           />
         </div>
-        <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+        <div className="space-y-2">
+          <Label
+            htmlFor="numFinishPaintCoats"
+            className="font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Số lớp sơn phủ
+            <p className="text-xs text-muted-foreground mt-1">
+              Số lớp sơn màu bạn muốn sơn lên bề mặt (thường là 2 lớp).
+            </p>
+          </Label>
+          <Input
+            id="numFinishPaintCoats"
+            type="number"
+            value={laborSpecs.numFinishPaintCoats}
+            onChange={(e) =>
+              setLaborSpecs((s) => ({
+                ...s,
+                numFinishPaintCoats: Number.parseFloat(e.target.value) || 0,
+              }))
+            }
+            className="h-10"
+            min="1"
+          />
+        </div>
+        <div className="space-y-2 sm:col-span-full lg:col-span-1">
           <Label
             htmlFor="otherCosts"
             className="font-semibold text-gray-700 dark:text-gray-300"
           >
             Chi phí khác (dụng cụ, đi lại, etc.)
+            <p className="text-xs text-muted-foreground mt-1">
+              Các khoản chi phí phụ trợ khác không thuộc vật tư hay nhân công
+              trực tiếp.
+            </p>
           </Label>
           <Input
             id="otherCosts"

@@ -1,117 +1,271 @@
-import type { PaintCalculationInputs, LaborSpecs } from './components/types';
+import type {
+  PaintCalculationInputs,
+  QuickCalculationInputs,
+  LaborSpecs,
+  Results,
+} from './components/types';
 import {
   HouseType,
-  WallSurfaceType,
-  WALL_COEFFICIENTS,
-  WALL_SURFACE_COEFFICIENTS,
-  DOOR_STANDARD_WIDTH,
-  DOOR_STANDARD_HEIGHT,
-  WINDOW_STANDARD_WIDTH,
-  WINDOW_STANDARD_HEIGHT,
-  WASTAGE_FACTOR,
-  QUICK_CALC_FLOOR_AREA_MULTIPLIER,
-  QUICK_CALC_DEDUCTION,
+  STANDARD_DOOR_AREA,
+  STANDARD_WINDOW_AREA,
+  STANDARD_BALCONY_DOOR_AREA,
+  PRIMER_COVERAGE_PER_LITER,
+  FINISH_PAINT_COVERAGE_PER_LITER,
+  DEFAULT_COEFFICIENTS,
+  DAILY_WORK_HOURS,
 } from './constants';
 
 // Function for detailed paint area calculation
 export const calculateDetailedPaintJob = (
   inputs: PaintCalculationInputs,
   laborSpecs: LaborSpecs,
-) => {
+): Results => {
   const {
-    roomLengths,
-    roomWidths,
-    ceilingHeight,
     houseType,
+    ceilingHeight,
     numDoors,
     numWindows,
-    otherDoorArea,
-    paintCeiling,
-    wallSurfaceType,
+    numBalconyDoors,
+    mainFloorDimensions,
+    numFloors,
+    totalFloorArea,
+    staircaseLength,
+    balconyLength,
+    numRooms,
   } = inputs;
 
-  // Step 1: Calculate total perimeter and total floor area
-  let totalPerimeter = 0;
-  let totalFloorArea = 0;
-  for (let i = 0; i < roomLengths.length; i++) {
-    const roomLength = roomLengths[i] || 0;
-    const roomWidth = roomWidths[i] || 0;
-    const roomPerimeter = 2 * (roomLength + roomWidth);
-    totalPerimeter += roomPerimeter;
-    totalFloorArea += roomLength * roomWidth;
-  }
+  const {
+    wallCoefficient,
+    surfaceCoefficient,
+    ceilingCoefficient,
+    complexDesignCoefficient,
+    staircaseCoefficient,
+    sharedWallCoefficient,
+    balconyCoefficient,
+    economicCoefficient,
+    wastageFactor,
+  } = DEFAULT_COEFFICIENTS[houseType];
 
-  // Step 2: Determine wall coefficient 'k' using the enum and map
-  const wallCoefficient_k =
-    WALL_COEFFICIENTS[houseType] || WALL_COEFFICIENTS[HouseType.ONE_ROOM];
+  let totalAreaBeforeWastage = 0;
+  let totalCeilingArea = 0;
 
-  // Step 3: Calculate wall area
-  const wallArea = totalPerimeter * ceilingHeight * wallCoefficient_k;
-
-  // Step 4: Calculate ceiling area (if painting ceiling)
-  let ceilingArea = 0;
-  if (paintCeiling) {
-    ceilingArea = totalFloorArea;
-  }
-
-  // Step 5: Calculate exclusion area (doors and windows)
-  const doorExclusionArea =
-    numDoors * DOOR_STANDARD_HEIGHT * DOOR_STANDARD_WIDTH;
-  const windowExclusionArea =
-    numWindows * WINDOW_STANDARD_HEIGHT * WINDOW_STANDARD_WIDTH;
+  // Calculate total exclusion area (doors, windows, balcony doors)
   const totalExclusionArea =
-    doorExclusionArea + windowExclusionArea + otherDoorArea;
+    (numDoors || 0) * STANDARD_DOOR_AREA +
+    (numWindows || 0) * STANDARD_WINDOW_AREA +
+    (numBalconyDoors || 0) * STANDARD_BALCONY_DOOR_AREA;
 
-  // Step 6: Determine wall surface coefficient 'm' using the enum and map
-  const wallSurfaceCoefficient_m =
-    WALL_SURFACE_COEFFICIENTS[wallSurfaceType] ||
-    WALL_SURFACE_COEFFICIENTS[WallSurfaceType.FLAT];
+  switch (houseType) {
+    case HouseType.CAP_4: {
+      const { length, width } = mainFloorDimensions?.[0] || {
+        length: 0,
+        width: 0,
+      };
+      const perimeter = 2 * (length + width);
+      const floorArea = length * width;
 
-  // Step 7: Calculate final total area including wastage
-  let effectiveArea =
-    (wallArea + ceilingArea - totalExclusionArea) * wallSurfaceCoefficient_m;
+      const wallArea =
+        perimeter * ceilingHeight * wallCoefficient * surfaceCoefficient;
+      totalCeilingArea = floorArea * ceilingCoefficient;
 
-  // Ensure effective area is not negative
-  effectiveArea = Math.max(0, effectiveArea);
+      totalAreaBeforeWastage = wallArea + totalCeilingArea - totalExclusionArea;
+      break;
+    }
+    case HouseType.NHA_ONG: {
+      const { length, width } = mainFloorDimensions?.[0] || {
+        length: 0,
+        width: 0,
+      };
+      const perimeterPerFloor = 2 * (length + width);
 
-  const totalArea = effectiveArea * WASTAGE_FACTOR;
+      // Area of walls per floor, before subtracting doors/windows
+      const wallAreaPerFloor =
+        perimeterPerFloor * ceilingHeight * wallCoefficient;
+      const totalWallAreaBeforeExclusionPerFloor =
+        wallAreaPerFloor - totalExclusionArea;
+      const totalWallAreaForFloors =
+        totalWallAreaBeforeExclusionPerFloor * (numFloors || 1);
+
+      const staircasePaintArea =
+        (staircaseLength || 0) * ceilingHeight * staircaseCoefficient;
+
+      totalAreaBeforeWastage = totalWallAreaForFloors + staircasePaintArea;
+      // Assume ceiling is painted for each floor
+      totalCeilingArea = length * width * (numFloors || 1) * ceilingCoefficient;
+      totalAreaBeforeWastage += totalCeilingArea;
+      break;
+    }
+    case HouseType.BIET_THU: {
+      const { length, width } = mainFloorDimensions?.[0] || {
+        length: 0,
+        width: 0,
+      };
+      const perimeterPerFloor = 2 * (length + width);
+
+      const wallAreaForTotalFloors_NoCoeff =
+        perimeterPerFloor * ceilingHeight * (numFloors || 1);
+      const wallArea_WithCoeff =
+        wallAreaForTotalFloors_NoCoeff * wallCoefficient * surfaceCoefficient;
+
+      totalCeilingArea = (totalFloorArea || 0) * ceilingCoefficient;
+
+      const baseArea =
+        wallArea_WithCoeff + totalCeilingArea - totalExclusionArea;
+      totalAreaBeforeWastage = baseArea * (1 + complexDesignCoefficient);
+      break;
+    }
+    case HouseType.CHUNG_CU: {
+      const { length, width } = mainFloorDimensions?.[0] || {
+        length: 0,
+        width: 0,
+      };
+      const perimeterInside = 2 * (length + width);
+      const floorArea = length * width;
+
+      const wallAreaInside = perimeterInside * ceilingHeight * wallCoefficient;
+      const balconyPaintArea =
+        (balconyLength || 0) * ceilingHeight * balconyCoefficient;
+
+      totalCeilingArea = floorArea * ceilingCoefficient;
+
+      totalAreaBeforeWastage =
+        wallAreaInside +
+        balconyPaintArea +
+        totalCeilingArea -
+        totalExclusionArea;
+      break;
+    }
+    case HouseType.NHA_LIEN_KE: {
+      const { length, width } = mainFloorDimensions?.[0] || {
+        length: 0,
+        width: 0,
+      };
+      const perimeterPerFloor = 2 * (length + width);
+
+      const wallAreaPerFloor =
+        perimeterPerFloor *
+        ceilingHeight *
+        wallCoefficient *
+        sharedWallCoefficient;
+      const totalWallAreaForFloors = wallAreaPerFloor * (numFloors || 1);
+
+      totalAreaBeforeWastage = totalWallAreaForFloors - totalExclusionArea;
+
+      // Assume ceiling is painted for each floor
+      totalCeilingArea = length * width * (numFloors || 1) * ceilingCoefficient;
+      totalAreaBeforeWastage += totalCeilingArea;
+      break;
+    }
+    case HouseType.NHA_TRO: {
+      const { length, width } = mainFloorDimensions?.[0] || {
+        length: 0,
+        width: 0,
+      };
+      const perimeterPerRoom = 2 * (length + width);
+      const floorAreaPerRoom = length * width;
+
+      const wallAreaPerRoom =
+        perimeterPerRoom *
+        ceilingHeight *
+        wallCoefficient *
+        surfaceCoefficient *
+        economicCoefficient;
+      const totalExclusionAreaPerRoom =
+        (numDoors || 0) * STANDARD_DOOR_AREA +
+        (numWindows || 0) * STANDARD_WINDOW_AREA;
+
+      const areaPerRoomBeforeWastage =
+        wallAreaPerRoom +
+        floorAreaPerRoom * ceilingCoefficient -
+        totalExclusionAreaPerRoom; // Assuming ceiling is also painted per room
+      totalAreaBeforeWastage = areaPerRoomBeforeWastage * (numRooms || 1);
+      break;
+    }
+    default:
+      totalAreaBeforeWastage = 0;
+      break;
+  }
+
+  const totalArea = totalAreaBeforeWastage * (1 + wastageFactor);
+
+  // Calculate paint quantities
+  const primerPaintLiters = totalArea / PRIMER_COVERAGE_PER_LITER;
+  const finishPaintLiters =
+    (totalArea / FINISH_PAINT_COVERAGE_PER_LITER) *
+    (laborSpecs.numFinishPaintCoats || 2); // Default to 2 coats if not specified
 
   // Calculate costs and work time
-  const laborCost =
-    totalArea * laborSpecs.laborCostPerM2 + laborSpecs.otherCosts;
-  const totalCost = laborCost;
+  const totalPaintCost = primerPaintLiters * 0 + finishPaintLiters * 0; // Assuming paint cost will be added later
+  const laborCost = totalArea * laborSpecs.laborCostPerM2;
+  const totalCost = totalPaintCost + laborCost + laborSpecs.otherCosts;
   const workTime = totalArea * laborSpecs.timePerM2;
 
   return {
     totalArea: Number.parseFloat(totalArea.toFixed(2)),
-    laborCost,
-    totalCost,
+    primerPaintLiters: Number.parseFloat(primerPaintLiters.toFixed(2)),
+    finishPaintLiters: Number.parseFloat(finishPaintLiters.toFixed(2)),
+    laborCost: Number.parseFloat(laborCost.toFixed(0)),
+    totalCost: Number.parseFloat(totalCost.toFixed(0)),
     workTime: Number.parseFloat(workTime.toFixed(1)),
   };
 };
 
 // Function for quick paint area calculation
 export const calculateQuickPaintJob = (
-  floorArea: number,
+  inputs: QuickCalculationInputs,
   laborSpecs: LaborSpecs,
-) => {
-  // S = Diện tích sàn × 3.2 - 8
-  let totalArea =
-    floorArea * QUICK_CALC_FLOOR_AREA_MULTIPLIER - QUICK_CALC_DEDUCTION;
+): Results => {
+  const { houseType, totalFloorArea, numFloors, numRooms } = inputs;
+  const { quickCalcMultiplier, quickCalcDeduction } =
+    DEFAULT_COEFFICIENTS[houseType];
+
+  let totalArea = 0;
+
+  switch (houseType) {
+    case HouseType.CAP_4:
+    case HouseType.CHUNG_CU: {
+      totalArea =
+        (totalFloorArea || 0) * quickCalcMultiplier - quickCalcDeduction;
+      break;
+    }
+    case HouseType.NHA_ONG:
+    case HouseType.NHA_LIEN_KE:
+    case HouseType.BIET_THU: {
+      totalArea =
+        (totalFloorArea || 0) * quickCalcMultiplier -
+        (numFloors || 1) * quickCalcDeduction;
+      break;
+    }
+    case HouseType.NHA_TRO: {
+      totalArea = (numRooms || 0) * quickCalcMultiplier - quickCalcDeduction;
+      break;
+    }
+    default:
+      totalArea = 0;
+      break;
+  }
 
   // Ensure the total area is not negative
   totalArea = Math.max(0, totalArea);
 
+  // Calculate paint quantities
+  const primerPaintLiters = totalArea / PRIMER_COVERAGE_PER_LITER;
+  const finishPaintLiters =
+    (totalArea / FINISH_PAINT_COVERAGE_PER_LITER) *
+    (laborSpecs.numFinishPaintCoats || 2);
+
   // Calculate costs and work time
-  const laborCost =
-    totalArea * laborSpecs.laborCostPerM2 + laborSpecs.otherCosts;
-  const totalCost = laborCost;
+  const totalPaintCost = primerPaintLiters * 0 + finishPaintLiters * 0; // Assuming paint cost will be added later
+  const laborCost = totalArea * laborSpecs.laborCostPerM2;
+  const totalCost = totalPaintCost + laborCost + laborSpecs.otherCosts;
   const workTime = totalArea * laborSpecs.timePerM2;
 
   return {
     totalArea: Number.parseFloat(totalArea.toFixed(2)),
-    laborCost,
-    totalCost,
+    primerPaintLiters: Number.parseFloat(primerPaintLiters.toFixed(2)),
+    finishPaintLiters: Number.parseFloat(finishPaintLiters.toFixed(2)),
+    laborCost: Number.parseFloat(laborCost.toFixed(0)),
+    totalCost: Number.parseFloat(totalCost.toFixed(0)),
     workTime: Number.parseFloat(workTime.toFixed(1)),
   };
 };

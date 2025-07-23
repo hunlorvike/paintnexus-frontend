@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   calculateDetailedPaintJob,
   calculateQuickPaintJob,
@@ -13,8 +13,8 @@ import type {
   LaborSpecs,
   Results,
 } from './components/types';
+import { CalculationTab, HouseType } from './constants';
 import { QuickCalculation } from './components/QuickCalculation';
-import { CalculationTab, HouseType, WallSurfaceType } from './constants';
 
 const PaintCalculator = () => {
   const [activeTab, setActiveTab] = useState<CalculationTab>(
@@ -22,78 +22,40 @@ const PaintCalculator = () => {
   );
 
   const [detailedInputs, setDetailedInputs] = useState<PaintCalculationInputs>({
-    roomLengths: [10],
-    roomWidths: [8],
-    ceilingHeight: 3.2,
-    houseType: HouseType.TWO_THREE_ROOMS,
+    houseType: HouseType.CAP_4, // Default to Nha Cap 4
+    ceilingHeight: 2.7,
     numDoors: 2,
     numWindows: 4,
-    otherDoorArea: 0,
-    paintCeiling: true,
-    wallSurfaceType: WallSurfaceType.FLAT,
+    mainFloorDimensions: [{ length: 8, width: 6 }], // Example for Cap 4
   });
 
   const [quickInputs, setQuickInputs] = useState<QuickCalculationInputs>({
-    floorArea: 100,
+    houseType: HouseType.CAP_4, // Default to Nha Cap 4
+    totalFloorArea: 48, // Example for Cap 4
   });
 
   const [laborSpecs, setLaborSpecs] = useState<LaborSpecs>({
     laborCostPerM2: 30000,
-    otherCosts: 0,
     timePerM2: 0.25,
+    otherCosts: 0,
+    numFinishPaintCoats: 2, // Default to 2 coats
   });
 
   const [results, setResults] = useState<Results>({
     totalArea: 0,
+    primerPaintLiters: 0,
+    finishPaintLiters: 0,
     laborCost: 0,
     totalCost: 0,
     workTime: 0,
   });
-
-  const addRoom = useCallback(() => {
-    setDetailedInputs((prev) => ({
-      ...prev,
-      roomLengths: [...prev.roomLengths, 0],
-      roomWidths: [...prev.roomWidths, 0],
-    }));
-  }, []);
-
-  const removeRoom = useCallback((index: number) => {
-    setDetailedInputs((prev) => ({
-      ...prev,
-      roomLengths: prev.roomLengths.filter((_, i) => i !== index),
-      roomWidths: prev.roomWidths.filter((_, i) => i !== index),
-    }));
-  }, []);
-
-  const updateRoomDimension = useCallback(
-    (index: number, type: 'length' | 'width', value: number) => {
-      setDetailedInputs((prev) => {
-        const newLengths = [...prev.roomLengths];
-        const newWidths = [...prev.roomWidths];
-
-        if (type === 'length') {
-          newLengths[index] = value;
-        } else {
-          newWidths[index] = value;
-        }
-
-        return {
-          ...prev,
-          roomLengths: newLengths,
-          roomWidths: newWidths,
-        };
-      });
-    },
-    [],
-  );
 
   useEffect(() => {
     let newResults: Results;
     if (activeTab === CalculationTab.DETAILED) {
       newResults = calculateDetailedPaintJob(detailedInputs, laborSpecs);
     } else {
-      newResults = calculateQuickPaintJob(quickInputs.floorArea, laborSpecs);
+      newResults = calculateQuickPaintJob(quickInputs, laborSpecs);
     }
     setResults(newResults);
   }, [activeTab, detailedInputs, quickInputs, laborSpecs]);
@@ -107,9 +69,6 @@ const PaintCalculator = () => {
             <CalculatorInputs
               inputs={detailedInputs}
               setInputs={setDetailedInputs}
-              addRoom={addRoom}
-              removeRoom={removeRoom}
-              updateRoomDimension={updateRoomDimension}
             />
           ) : (
             <QuickCalculation inputs={quickInputs} setInputs={setQuickInputs} />
