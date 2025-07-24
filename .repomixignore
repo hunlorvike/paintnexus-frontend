@@ -1,0 +1,13 @@
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+.DS_Store
+/node_modules/
+package-lock.json
+
+# React Router
+/.react-router/
+/build/
+
+/.idx/

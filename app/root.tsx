@@ -25,6 +25,40 @@ export const links = () => [
   },
 ];
 
+export const meta = () => {
+  return [
+    { charset: 'utf-8' },
+    { title: 'PaintNexus - Giải pháp Sơn toàn diện' },
+    { name: 'viewport', content: 'width=device-width,initial-scale=1' },
+    {
+      name: 'description',
+      content:
+        'Ứng dụng giúp ước tính lượng sơn, quản lý dự án và tối ưu hóa chi phí sơn.',
+    },
+    { property: 'og:title', content: 'PaintNexus' },
+    {
+      property: 'og:description',
+      content: 'Giải pháp Sơn toàn diện cho mọi công trình.',
+    },
+    {
+      property: 'og:image',
+      content: 'https://sondaiminh.com/images/og-image.jpg',
+    },
+    { property: 'og:url', content: 'https://sondaiminh.com' },
+    { property: 'og:type', content: 'website' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'PaintNexus' },
+    {
+      name: 'twitter:description',
+      content: 'Giải pháp Sơn toàn diện cho mọi công trình.',
+    },
+    {
+      name: 'twitter:image',
+      content: 'https://sondaiminh.com/images/twitter-image.jpg',
+    },
+  ];
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
